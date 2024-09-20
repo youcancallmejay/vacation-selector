@@ -1,25 +1,49 @@
-import logo from './logo.svg';
-import './App.css';
 
-function App() {
+const availableVacations = [
+  {
+    id: 0,
+    name: "5 day Mexican Adventure",
+    location: "Mexico",
+    duration: 5,
+    ship: "Black Pearl"
+  },
+  {
+    id: 1, 
+    name: "5 day Alaskan Exploration",
+    location: "Alaska",
+    duration: 5, 
+    ship: "HMS Endeavor"
+  },
+  {
+    id: 2,
+    name: "5 day Quebecois Journey",
+    location: "Quebec",
+    duration: 5, 
+    ship: "HMS Interceptor"
+  }
+]
+
+
+export default function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h1>hello world</h1>
     </div>
   );
 }
 
-export default App;
+function VacationList(){
+  const vacations = availableVacations;
+  return(
+    <div>
+      {vacations.map((vacation) => <Vacation vacation={vacation}/>)}
+    </div>
+  )
+
+}
+
+function Vacation({vacation}){
+  <ul>
+    <li>{vacation.name}</li>
+  </ul>
+}
