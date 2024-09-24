@@ -58,10 +58,17 @@ export default function App() {
 
   const [selectedVacation, setSelectedVacation] = useState({});
   const [bookNowVisible, setBookNowVisible] = useState(false);
+  const [guest, setGuest] = useState([])
+
+
+  function handleAddGuest(newGuest){
+    setGuest(prevGuest => [...prevGuest, newGuest])
+  }
 
 
   function handleSelectedVacation(newSelection){
     setSelectedVacation(newSelection);
+    setBookNowVisible(false);
   }
 
   function handleBookNow(){
@@ -73,52 +80,122 @@ export default function App() {
       <VacationList onSelectedVacation={handleSelectedVacation} />
       {selectedVacation.id && <HighlightedVacation  selectedVacation={selectedVacation} onBookNow={handleBookNow} />}
       {bookNowVisible && selectedVacation.excursions && <BookNow selectedVacation={selectedVacation}/>}
+      <BookGuest onAddGuest={handleAddGuest}  guest={guest}/>
     </div>
   );
 }
 
 function BookNow({selectedVacation}){
+const initialCost = selectedVacation.price;
+
+const [total, setTotal] = useState(initialCost);
+
+const insurance = total * .2;
+
+
+function handleAddOn(value, isChecked){
+  if(isChecked){
+    setTotal(total + value)
+  } else{
+    setTotal(total - value)
+  }
+}
+
+// work on math for adding insurance and fix formatting 
+
 return(
-  <div>
-    <h3>Let's choose your excursions now!</h3>
-    
-    {selectedVacation.excursions ? (
-        <ul>
-          {selectedVacation.excursions.map((excursion) => (
-            <li key={selectedVacation.id}>
-              <label>
-                <input type="checkbox"/>
-                ${excursion.price} {excursion.name}
-                </label>
-              </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No ports of call available.</p> // Optional message if portsOfCall is not defined
-      )}
+  <div className="total-cost-container">
+      <h2>Your total: ${total}</h2>
+      <label>
+        <input type="checkbox" value={insurance} onChange={((e) => handleAddOn(Number(e.target.value), e.target.checked))}></input>
+        <h3 style={{color:"red"}}>Add trip insurance:</h3> ${insurance}
+      </label>
 
-
+    <div className="total-cost-extras">
+      <h3>Let's choose your addons now!</h3>
+      {selectedVacation.excursions ? (
+          <ul>
+            {selectedVacation.excursions.map((excursion) => (
+              <li key={selectedVacation.id}>
+                <label>
+                  <input type="checkbox" value={excursion.price} onChange={(e) => handleAddOn(Number(e.target.value), e.target.checked)}/>
+                  ${excursion.price} {excursion.name}
+                  </label>
+                </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No ports of call available.</p> // Optional message if portsOfCall is not defined
+        )}
+    </div>
   </div>
 )
+}
+
+function BookGuest({onAddGuest, guest}){
+
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+
+  function onHandleSubmit(e){
+    e.preventDefault();
+    if(guest.length>=4){
+      alert("Only a maximum of 4 guests can be added.")
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      return;
+    }
+    onAddGuest({ firstName, lastName, email });
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+  }
+
+  return(
+    <div>
+        <form onSubmit={onHandleSubmit}>
+          <label name="firstName" > First Name </label>
+          <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)}></input>
+
+          <label name="lastName"> Last Name </label>
+          <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)}></input>
+
+          <label name="email"> Email </label>
+          <input type="text" value={email} onChange={(e) => setEmail(e.target.value)}></input>
+
+          <Button label="Add Guest"></Button>
+
+        </form>
+        <ul>
+          {guest.map((person) => <li><label>{person.firstName} || {person.lastName} || {person.email} || {guest.length}</label></li>)}
+        </ul>
+    </div>
+
+  )
 }
 
 function HighlightedVacation({selectedVacation, onBookNow}){
 
   return(
-    <div>
-      <h3>Selected Vacation</h3>
-      <h3>{selectedVacation.name}</h3>
-      {selectedVacation.portsOfCall ? (
-        <ul>
-          {selectedVacation.portsOfCall.map((port, index) => (
-            <li key={index}>{port}</li>
-          ))}
-        </ul>
-      ) : (
-        <p>No ports of call available.</p> // Optional message if portsOfCall is not defined
-      )}
+    <div className="highlighted-vacation-container">
       <img src={selectedVacation.image} alt={selectedVacation.location}></img>
-      <Button label="Book now" onClick={onBookNow}></Button>
+      <div className="highlighted-vacation-info"> 
+        <h3>{selectedVacation.name} ONLY <span style={{textDecoration: "underline"}}>${selectedVacation.price}</span></h3>
+          {selectedVacation.portsOfCall ? (
+            <ul>
+              {selectedVacation.portsOfCall.map((port, index) => (
+                <li key={index}>{port}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>No ports of call available.</p> // Optional message if portsOfCall is not defined
+          )}
+          <Button label="Book now" onClick={onBookNow} className="book-now-button"></Button>
+      </div>
+
+
     </div>
   ) 
 }
@@ -126,7 +203,7 @@ function HighlightedVacation({selectedVacation, onBookNow}){
 function VacationList({onSelectedVacation}){
   const vacations = availableVacations;
   return(
-    <div>
+    <div  className="vacation-list-container">
       {vacations.map((vacation) => <Vacation vacation={vacation} key={vacation.id} onSelectedVacation={onSelectedVacation}/>)}
     </div>
   )
@@ -135,19 +212,17 @@ function VacationList({onSelectedVacation}){
 
 function Vacation({onSelectedVacation, vacation}){
 return(
-  <ul>
-    <li>
-      <h2>{vacation.name}</h2>
-      <img src={vacation.image} alt={vacation.location}></img>
-      <p>{vacation.description}</p>
-      </li>
-      <Button label="Learn More" onClick={() => onSelectedVacation(vacation)}/>
-  </ul>
+  <div className="vacation-list">
+        <h2>{vacation.name}</h2>
+        <img src={vacation.image} alt={vacation.location}></img>
+        <p>{vacation.description}</p>
+        <Button label="Learn More" onClick={() => onSelectedVacation(vacation)}/>
+  </div>
 )
 }
 
 function Button({onClick, label, className, style}){
   return(
-    <button onClick={onClick}>{label}</button>
+    <button onClick={onClick} className={className}>{label}</button>
   )
 }
