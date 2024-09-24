@@ -107,7 +107,7 @@ function HighlightedVacation({selectedVacation, onBookNow}){
   return(
     <div>
       <h3>Selected Vacation</h3>
-      <h3>{selectedVacation.name}</h3>
+      <h3>{selectedVacation.name} ONLY <span style={{textDecorationLine: 'underline'}}>${selectedVacation.price}</span></h3>
       {selectedVacation.portsOfCall ? (
         <ul>
           {selectedVacation.portsOfCall.map((port, index) => (
