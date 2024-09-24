@@ -58,6 +58,12 @@ export default function App() {
 
   const [selectedVacation, setSelectedVacation] = useState({});
   const [bookNowVisible, setBookNowVisible] = useState(false);
+  const [guest, setGuest] = useState([])
+
+
+  function handleAddGuest(newGuest){
+    setGuest(prevGuest => [...prevGuest, newGuest])
+  }
 
 
   function handleSelectedVacation(newSelection){
@@ -74,6 +80,7 @@ export default function App() {
       <VacationList onSelectedVacation={handleSelectedVacation} />
       {selectedVacation.id && <HighlightedVacation  selectedVacation={selectedVacation} onBookNow={handleBookNow} />}
       {bookNowVisible && selectedVacation.excursions && <BookNow selectedVacation={selectedVacation}/>}
+      <BookGuest onAddGuest={handleAddGuest}  guest={guest}/>
     </div>
   );
 }
@@ -125,23 +132,70 @@ return(
 )
 }
 
-function HighlightedVacation({selectedVacation, onBookNow}){
+function BookGuest({onAddGuest, guest}){
+
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+
+  function onHandleSubmit(e){
+    e.preventDefault();
+    if(guest.length>=4){
+      alert("Only a maximum of 4 guests can be added.")
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      return;
+    }
+    onAddGuest({ firstName, lastName, email });
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+  }
 
   return(
     <div>
-      <h3>Selected Vacation</h3>
-      <h3>{selectedVacation.name}</h3>
-      {selectedVacation.portsOfCall ? (
+        <form onSubmit={onHandleSubmit}>
+          <label name="firstName" > First Name </label>
+          <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)}></input>
+
+          <label name="lastName"> Last Name </label>
+          <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)}></input>
+
+          <label name="email"> Email </label>
+          <input type="text" value={email} onChange={(e) => setEmail(e.target.value)}></input>
+
+          <Button label="Add Guest"></Button>
+
+        </form>
         <ul>
-          {selectedVacation.portsOfCall.map((port, index) => (
-            <li key={index}>{port}</li>
-          ))}
+          {guest.map((person) => <li><label>{person.firstName} || {person.lastName} || {person.email} || {guest.length}</label></li>)}
         </ul>
-      ) : (
-        <p>No ports of call available.</p> // Optional message if portsOfCall is not defined
-      )}
+    </div>
+
+  )
+}
+
+function HighlightedVacation({selectedVacation, onBookNow}){
+
+  return(
+    <div className="highlighted-vacation-container">
       <img src={selectedVacation.image} alt={selectedVacation.location}></img>
-      <Button label="Book now" onClick={onBookNow}></Button>
+      <div className="highlighted-vacation-info"> 
+        <h3>{selectedVacation.name} ONLY <span style={{textDecoration: "underline"}}>${selectedVacation.price}</span></h3>
+          {selectedVacation.portsOfCall ? (
+            <ul>
+              {selectedVacation.portsOfCall.map((port, index) => (
+                <li key={index}>{port}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>No ports of call available.</p> // Optional message if portsOfCall is not defined
+          )}
+          <Button label="Book now" onClick={onBookNow} className="book-now-button"></Button>
+      </div>
+
+
     </div>
   ) 
 }
