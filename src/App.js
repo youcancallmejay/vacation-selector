@@ -57,42 +57,46 @@ export default function App() {
 
 
   const [selectedVacation, setSelectedVacation] = useState({});
+  const [selectedGuest, setSelectedGuest] = useState()
   const [bookNowVisible, setBookNowVisible] = useState(false);
+  const [bookGuestVisbile, setBookGuestVisible] = useState(false);
   const [guest, setGuest] = useState([])
-
-
-  function handleAddGuest(newGuest){
-    setGuest(prevGuest => [...prevGuest, newGuest])
-  }
-
 
   function handleSelectedVacation(newSelection){
     setSelectedVacation(newSelection);
     setBookNowVisible(false);
   }
 
-  function handleBookNow(){
+  function handleAddGuest(newGuest){
+    setGuest(prevGuest => [...prevGuest, newGuest])
+  }
+
+  function handleGuestFormVisible(){
+    setBookGuestVisible(true);
+  }
+
+  function handleBookNow(selectedGuest){
+    setSelectedGuest(selectedGuest)
     setBookNowVisible(true)
   }
 
   return (
     <div className="App">
       <VacationList onSelectedVacation={handleSelectedVacation} />
-      {selectedVacation.id && <HighlightedVacation  selectedVacation={selectedVacation} onBookNow={handleBookNow} />}
-      {bookNowVisible && selectedVacation.excursions && <BookNow selectedVacation={selectedVacation}/>}
-      <BookGuest onAddGuest={handleAddGuest}  guest={guest}/>
+      {selectedVacation.id && <HighlightedVacation  selectedVacation={selectedVacation} onGuestVisible={handleGuestFormVisible} />}
+      {bookNowVisible && <BookNow selectedVacation={selectedVacation} selectedGuest={selectedGuest}/>}
+      {bookGuestVisbile && <BookGuest onAddGuest={handleAddGuest}  guest={guest} onBookNow={handleBookNow}/>}
     </div>
   );
 }
 
-function BookNow({selectedVacation}){
+function BookNow({selectedVacation, selectedGuest}){
 const initialCost = selectedVacation.price;
 
-const [total, setTotal] = useState(initialCost);
+
+selectedGuest.balance = total;
 
 const insurance = total * .2;
-
-
 function handleAddOn(value, isChecked){
   if(isChecked){
     setTotal(total + value)
@@ -102,10 +106,9 @@ function handleAddOn(value, isChecked){
 }
 
 // work on math for adding insurance and fix formatting 
-
 return(
   <div className="total-cost-container">
-      <h2>Your total: ${total}</h2>
+     <h2>{selectedGuest.firstName}'s total: ${total}</h2>
       <label>
         <input type="checkbox" value={insurance} onChange={((e) => handleAddOn(Number(e.target.value), e.target.checked))}></input>
         <h3 style={{color:"red"}}>Add trip insurance:</h3> ${insurance}
@@ -132,11 +135,12 @@ return(
 )
 }
 
-function BookGuest({onAddGuest, guest}){
+function BookGuest({onAddGuest, onBookNow, guest}){
 
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
+  const [balance, setBalance] = useState(0)
 
   function onHandleSubmit(e){
     e.preventDefault();
@@ -147,10 +151,11 @@ function BookGuest({onAddGuest, guest}){
       setEmail("");
       return;
     }
-    onAddGuest({ firstName, lastName, email });
+    onAddGuest({ firstName, lastName, email, balance });
     setFirstName("");
     setLastName("");
     setEmail("");
+    setBalance(0);
   }
 
   return(
@@ -169,14 +174,14 @@ function BookGuest({onAddGuest, guest}){
 
         </form>
         <ul>
-          {guest.map((person) => <li><label>{person.firstName} || {person.lastName} || {person.email} || {guest.length}</label></li>)}
+          {guest.map((person) => <li><label>{person.firstName} || {person.lastName} || {person.email} || {guest.length}</label> <Button onClick={() => onBookNow(person)}label="check out"> </Button></li>)}
         </ul>
     </div>
 
   )
 }
 
-function HighlightedVacation({selectedVacation, onBookNow}){
+function HighlightedVacation({selectedVacation, onGuestVisible}){
 
   return(
     <div className="highlighted-vacation-container">
@@ -192,7 +197,7 @@ function HighlightedVacation({selectedVacation, onBookNow}){
           ) : (
             <p>No ports of call available.</p> // Optional message if portsOfCall is not defined
           )}
-          <Button label="Book now" onClick={onBookNow} className="book-now-button"></Button>
+          <Button label="Book now" onClick={onGuestVisible} className="book-now-button"></Button>
       </div>
 
 
