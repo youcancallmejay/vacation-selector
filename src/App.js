@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const availableVacations = [
   {
@@ -62,13 +62,26 @@ export default function App() {
   const [bookGuestVisbile, setBookGuestVisible] = useState(false);
   const [guest, setGuest] = useState([])
 
+  useEffect(() => {
+    const updatedGuest = guest.find((g) => g.email === selectedGuest?.email);
+    setSelectedGuest(updatedGuest || {});
+  }, [guest, selectedGuest]);
+
+  function handleUpdateTotal(guestObject, balance){
+    setGuest((prevGuest) => prevGuest.map((g) => g.email === guestObject.email ? {...g, balance} : g))
+    const updatedGuest = guest.find((g) => g.email === guestObject.email);
+    setSelectedGuest(updatedGuest || {});
+
+  }
+
   function handleSelectedVacation(newSelection){
     setSelectedVacation(newSelection);
     setBookNowVisible(false);
   }
 
   function handleAddGuest(newGuest){
-    setGuest(prevGuest => [...prevGuest, newGuest])
+    const guestWithKey = {...newGuest, key: Date.now()}
+    setGuest(prevGuest => [...prevGuest, guestWithKey])
   }
 
   function handleGuestFormVisible(){
@@ -84,31 +97,32 @@ export default function App() {
     <div className="App">
       <VacationList onSelectedVacation={handleSelectedVacation} />
       {selectedVacation.id && <HighlightedVacation  selectedVacation={selectedVacation} onGuestVisible={handleGuestFormVisible} />}
-      {bookNowVisible && <BookNow selectedVacation={selectedVacation} selectedGuest={selectedGuest}/>}
-      {bookGuestVisbile && <BookGuest onAddGuest={handleAddGuest}  guest={guest} onBookNow={handleBookNow}/>}
+      {bookNowVisible && <BookNow selectedVacation={selectedVacation} selectedGuest={selectedGuest} onHandleUpdateTotal={handleUpdateTotal} />}
+      {bookGuestVisbile && <BookGuest onAddGuest={handleAddGuest}  guest={guest} onBookNow={handleBookNow} selectedVacation={selectedVacation}/>}
     </div>
   );
 }
 
-function BookNow({selectedVacation, selectedGuest}){
-const initialCost = selectedVacation.price;
+function BookNow({selectedVacation, selectedGuest, onHandleUpdateTotal}){
 
-
-selectedGuest.balance = total;
+  // onHandleUpdateTotal(selectedGuest, selectedVacation.price);
+ // const total = selectedGuest.balance;
+  const total = selectedGuest.balance; 
 
 const insurance = total * .2;
+
 function handleAddOn(value, isChecked){
   if(isChecked){
-    setTotal(total + value)
+    onHandleUpdateTotal(selectedGuest, (total + value))
   } else{
-    setTotal(total - value)
+    onHandleUpdateTotal(selectedGuest, (total - value))
   }
 }
 
 // work on math for adding insurance and fix formatting 
 return(
   <div className="total-cost-container">
-     <h2>{selectedGuest.firstName}'s total: ${total}</h2>
+     <h2>{selectedGuest.firstName}'s total: ${selectedGuest.balance}</h2>
       <label>
         <input type="checkbox" value={insurance} onChange={((e) => handleAddOn(Number(e.target.value), e.target.checked))}></input>
         <h3 style={{color:"red"}}>Add trip insurance:</h3> ${insurance}
@@ -135,7 +149,7 @@ return(
 )
 }
 
-function BookGuest({onAddGuest, onBookNow, guest}){
+function BookGuest({onAddGuest, onBookNow, guest, selectedVacation}){
 
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -151,7 +165,13 @@ function BookGuest({onAddGuest, onBookNow, guest}){
       setEmail("");
       return;
     }
-    onAddGuest({ firstName, lastName, email, balance });
+    onAddGuest({ 
+      firstName,
+      lastName,
+      email,
+      balance: selectedVacation.price
+     });
+    
     setFirstName("");
     setLastName("");
     setEmail("");
