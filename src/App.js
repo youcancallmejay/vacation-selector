@@ -72,11 +72,15 @@ export default function App() {
     excursionCheckboxes.forEach((checkbox) => checkbox.checked = false);
   }, [selectedGuest]);
 
-  function handleUpdateTotal(guestObject, balance, excursions = []){
-    setGuest((prevGuest) => prevGuest.map((g) => g.email === guestObject.email ? {...g, balance, excursions} : g))
+  function handleUpdateTotal(guestObject, balance, excursions = [], insurance = false){
+    setGuest((prevGuest) => prevGuest.map((g) => g.email === guestObject.email ? {...g, balance, excursions, insurance} : g))
     const updatedGuest = guest.find((g) => g.email === guestObject.email);
     setSelectedGuest(updatedGuest || {});
 
+  }
+
+  function handleRemoveGuest(person){
+    setGuest((prevGuest) => prevGuest.filter((g) => g.email !== person.email))
   }
 
   function handleSelectedVacation(newSelection){
@@ -103,7 +107,7 @@ export default function App() {
       <VacationList onSelectedVacation={handleSelectedVacation} />
       {selectedVacation.id && <HighlightedVacation  selectedVacation={selectedVacation} onGuestVisible={handleGuestFormVisible} />}
       {bookNowVisible && <BookNow selectedVacation={selectedVacation} selectedGuest={selectedGuest} onHandleUpdateTotal={handleUpdateTotal} />}
-      {bookGuestVisbile && <BookGuest onAddGuest={handleAddGuest}  guest={guest} onBookNow={handleBookNow} selectedVacation={selectedVacation}/>}
+      {bookGuestVisbile && <BookGuest onAddGuest={handleAddGuest} onHandleRemoveGuest={handleRemoveGuest} guest={guest} onBookNow={handleBookNow} selectedVacation={selectedVacation}/>}
     </div>
   );
 }
@@ -114,16 +118,24 @@ function BookNow({selectedVacation, selectedGuest, onHandleUpdateTotal}){
  // const total = selectedGuest.balance;
   const total = selectedGuest.balance; 
 
-const insurance = (total * .2).toFixed(2);
+
+  const insurance = (total * .2).toFixed(2);
+
+
 
 function handleAddOn(value, isChecked){
-
-  const excursionId = selectedVacation.excursions.find((e) => e.price === value).id;
-
-  if(isChecked){
-    onHandleUpdateTotal(selectedGuest, (total + value), [...(selectedGuest.excursions || []), excursionId])
-  } else{
-    onHandleUpdateTotal(selectedGuest, (total - value), selectedGuest.excursions.filter((id) => id !== excursionId ))
+  const excursion = selectedVacation.excursions.find((e) => e.price === value);
+  if (excursion) {
+    const excursionId = excursion.id;
+    if(isChecked && !selectedGuest.excursions?.includes(excursionId)){
+      onHandleUpdateTotal(selectedGuest, (total + value), [...(selectedGuest.excursions || []), excursionId])
+    } else if(!isChecked && selectedGuest.excursions?.includes(excursionId)){
+      const excursionId = excursion.id;
+      onHandleUpdateTotal(selectedGuest, (total - value), selectedGuest.excursions.filter((id) => id !== excursionId))
+    }
+  } else {
+    // Handle insurance
+    onHandleUpdateTotal(selectedGuest, isChecked ? total + value : total - value, selectedGuest.insurance = isChecked);
   }
 }
 
@@ -157,7 +169,7 @@ return(
 )
 }
 
-function BookGuest({onAddGuest, onBookNow, guest, selectedVacation}){
+function BookGuest({onAddGuest, onBookNow, onHandleRemoveGuest, guest, selectedVacation}){
 
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -202,7 +214,12 @@ function BookGuest({onAddGuest, onBookNow, guest, selectedVacation}){
 
         </form>
         <ul>
-          {guest.map((person) => <li><label>{person.firstName} || {person.lastName} || {person.email} || {guest.length}</label> <Button onClick={() => onBookNow(person)}label="check out"> </Button></li>)}
+          {guest.map((person) => 
+          <li>
+            <label>{person.firstName} || {person.lastName} || {person.email} || {guest.length}</label> 
+          <Button onClick={() => onBookNow(person)}label="check out"> </Button>
+          <Button label="Remove Guest" onClick={()=> onHandleRemoveGuest(person)}></Button>
+          </li>)}
         </ul>
     </div>
 
