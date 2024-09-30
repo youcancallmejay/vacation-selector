@@ -67,8 +67,13 @@ export default function App() {
     setSelectedGuest(updatedGuest || {});
   }, [guest, selectedGuest]);
 
-  function handleUpdateTotal(guestObject, balance){
-    setGuest((prevGuest) => prevGuest.map((g) => g.email === guestObject.email ? {...g, balance} : g))
+  useEffect(() => {
+    const excursionCheckboxes = document.querySelectorAll('input[type="checkbox"][value]');
+    excursionCheckboxes.forEach((checkbox) => checkbox.checked = false);
+  }, [selectedGuest]);
+
+  function handleUpdateTotal(guestObject, balance, excursions = []){
+    setGuest((prevGuest) => prevGuest.map((g) => g.email === guestObject.email ? {...g, balance, excursions} : g))
     const updatedGuest = guest.find((g) => g.email === guestObject.email);
     setSelectedGuest(updatedGuest || {});
 
@@ -109,13 +114,16 @@ function BookNow({selectedVacation, selectedGuest, onHandleUpdateTotal}){
  // const total = selectedGuest.balance;
   const total = selectedGuest.balance; 
 
-const insurance = total * .2;
+const insurance = (total * .2).toFixed(2);
 
 function handleAddOn(value, isChecked){
+
+  const excursionId = selectedVacation.excursions.find((e) => e.price === value).id;
+
   if(isChecked){
-    onHandleUpdateTotal(selectedGuest, (total + value))
+    onHandleUpdateTotal(selectedGuest, (total + value), [...(selectedGuest.excursions || []), excursionId])
   } else{
-    onHandleUpdateTotal(selectedGuest, (total - value))
+    onHandleUpdateTotal(selectedGuest, (total - value), selectedGuest.excursions.filter((id) => id !== excursionId ))
   }
 }
 
